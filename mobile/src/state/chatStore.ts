@@ -63,7 +63,10 @@ export const useChat = create<ChatState>((set, get) => ({
     }));
 
     const cart = { lines: useCart.getState().lines };
-    const history = asMessages(get().turns.slice(0, -1)); // exclude the streaming assistant turn
+    // History is *prior* turns only. The server appends `req.message` itself,
+    // so we must exclude both the just-added userTurn AND the streaming
+    // assistantTurn from history to avoid sending the user message twice.
+    const history = asMessages(get().turns.slice(0, -2));
 
     activeStream = streamChat(trimmed, cart, history, {
       onText: (delta) => {

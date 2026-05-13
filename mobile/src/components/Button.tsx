@@ -1,6 +1,12 @@
 import { Pressable, Text, View, ActivityIndicator } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { colors } from "../theme";
+import { colors, fonts } from "../theme";
 
 type Variant = "primary" | "secondary" | "ghost" | "destructive";
 
@@ -30,6 +36,8 @@ function fireHaptic(variant: Variant) {
   }
 }
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export function Button({
   label,
   onPress,
@@ -42,8 +50,24 @@ export function Button({
   accessibilityHint,
 }: Props) {
   const isDisabled = disabled || loading;
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
   return (
-    <Pressable
+    <AnimatedPressable
+      onPressIn={() => {
+        scale.value = withSpring(0.96, { damping: 18, stiffness: 320 });
+        opacity.value = withTiming(0.85, { duration: 80 });
+      }}
+      onPressOut={() => {
+        scale.value = withSpring(1, { damping: 14, stiffness: 220 });
+        opacity.value = withTiming(1, { duration: 120 });
+      }}
       onPress={() => {
         if (haptic) void fireHaptic(variant);
         onPress();
@@ -53,28 +77,31 @@ export function Button({
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
-      style={({ pressed }) => ({
-        opacity: isDisabled ? 0.5 : pressed ? 0.85 : 1,
-        transform: [{ scale: pressed ? 0.98 : 1 }],
-        backgroundColor:
-          variant === "primary"
-            ? colors.accent
-            : variant === "destructive"
-              ? "transparent"
-              : variant === "secondary"
-                ? colors.card
-                : "transparent",
-        borderWidth: variant === "secondary" || variant === "destructive" ? 1 : 0,
-        borderColor: variant === "destructive" ? colors.danger : colors.border,
-        borderRadius: 14,
-        paddingVertical: 16,
-        paddingHorizontal: 24,
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "row",
-        gap: 8,
-        alignSelf: fullWidth ? "stretch" : "auto",
-      })}
+      style={[
+        {
+          opacity: isDisabled ? 0.5 : 1,
+          backgroundColor:
+            variant === "primary"
+              ? colors.accent
+              : variant === "destructive"
+                ? "transparent"
+                : variant === "secondary"
+                  ? colors.card
+                  : "transparent",
+          borderWidth:
+            variant === "secondary" || variant === "destructive" ? 1 : 0,
+          borderColor: variant === "destructive" ? colors.danger : colors.border,
+          borderRadius: 14,
+          paddingVertical: 16,
+          paddingHorizontal: 24,
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "row",
+          gap: 8,
+          alignSelf: fullWidth ? "stretch" : "auto",
+        },
+        animatedStyle,
+      ]}
     >
       {loading ? (
         <ActivityIndicator color={variant === "primary" ? "#fff" : colors.text} />
@@ -89,6 +116,7 @@ export function Button({
                   : variant === "destructive"
                     ? colors.danger
                     : colors.text,
+              fontFamily: fonts.bold,
               fontWeight: "700",
               fontSize: 16,
               letterSpacing: 0.3,
@@ -98,6 +126,6 @@ export function Button({
           </Text>
         </>
       )}
-    </Pressable>
+    </AnimatedPressable>
   );
 }

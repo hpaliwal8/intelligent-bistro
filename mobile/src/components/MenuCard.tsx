@@ -4,7 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import type { MenuItem } from "../../../shared";
-import { colors } from "../theme";
+import { colors, fonts } from "../theme";
 import { formatPrice } from "../utils/price";
 import { MENU_IMAGE_PLACEHOLDER } from "../utils/menuImages";
 
@@ -77,6 +77,7 @@ export function MenuCard({ item }: { item: MenuItem }) {
                     color: tag === "spicy" ? colors.accentSoft : colors.text,
                     fontSize: 10,
                     letterSpacing: 1,
+                    fontFamily: fonts.bold,
                     fontWeight: "700",
                     textTransform: "uppercase",
                   }}
@@ -101,6 +102,7 @@ export function MenuCard({ item }: { item: MenuItem }) {
             style={{
               color: colors.text,
               fontSize: 18,
+              fontFamily: fonts.bold,
               fontWeight: "700",
               flex: 1,
             }}
@@ -112,6 +114,7 @@ export function MenuCard({ item }: { item: MenuItem }) {
             style={{
               color: colors.accentSoft,
               fontSize: 16,
+              fontFamily: fonts.bold,
               fontWeight: "700",
             }}
           >
@@ -124,6 +127,7 @@ export function MenuCard({ item }: { item: MenuItem }) {
             fontSize: 13,
             marginTop: 4,
             lineHeight: 19,
+            fontFamily: fonts.regular,
           }}
           numberOfLines={2}
         >

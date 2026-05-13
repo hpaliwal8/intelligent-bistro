@@ -79,3 +79,14 @@ export function TrashIcon({ size = 18, color = colors.danger }: IconProps) {
   );
 }
 
+export function SendIcon({ size = 18, color = "#fff" }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M3.4 20.4l17.4-8.4L3.4 3.6l1.4 7.6L15 12l-10.2.8z"
+        fill={color}
+      />
+    </Svg>
+  );
+}
+

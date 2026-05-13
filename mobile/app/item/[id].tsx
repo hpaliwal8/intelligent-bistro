@@ -10,7 +10,7 @@ import {
   type ModifierGroup,
   type SelectedModifier,
 } from "../../../shared";
-import { colors } from "../../src/theme";
+import { colors, fonts } from "../../src/theme";
 import { unitPrice, formatPrice } from "../../src/utils/price";
 import { MENU_IMAGE_PLACEHOLDER } from "../../src/utils/menuImages";
 import { Button } from "../../src/components/Button";
@@ -134,6 +134,7 @@ export default function ItemDetail() {
             style={{
               color: colors.text,
               fontSize: 26,
+              fontFamily: fonts.extrabold,
               fontWeight: "800",
               letterSpacing: -0.4,
             }}
@@ -146,6 +147,7 @@ export default function ItemDetail() {
               marginTop: 8,
               fontSize: 14,
               lineHeight: 21,
+              fontFamily: fonts.regular,
             }}
           >
             {item.description}
@@ -155,6 +157,7 @@ export default function ItemDetail() {
               color: colors.accentSoft,
               marginTop: 14,
               fontSize: 18,
+              fontFamily: fonts.extrabold,
               fontWeight: "800",
             }}
           >
@@ -172,11 +175,22 @@ export default function ItemDetail() {
                 }}
               >
                 <Text
-                  style={{ color: colors.text, fontWeight: "700", fontSize: 15 }}
+                  style={{
+                    color: colors.text,
+                    fontFamily: fonts.bold,
+                    fontWeight: "700",
+                    fontSize: 15,
+                  }}
                 >
                   {group.label}
                 </Text>
-                <Text style={{ color: colors.muted, fontSize: 11 }}>
+                <Text
+                  style={{
+                    color: colors.muted,
+                    fontSize: 11,
+                    fontFamily: fonts.medium,
+                  }}
+                >
                   {group.required ? "Required" : "Optional"}
                   {group.multi ? " • Pick any" : ""}
                 </Text>
@@ -229,6 +243,7 @@ export default function ItemDetail() {
                           style={{
                             color: colors.text,
                             fontSize: 14,
+                            fontFamily: selected ? fonts.bold : fonts.medium,
                             fontWeight: selected ? "700" : "500",
                           }}
                         >
@@ -240,6 +255,7 @@ export default function ItemDetail() {
                           style={{
                             color: colors.muted,
                             fontSize: 13,
+                            fontFamily: fonts.semibold,
                             fontWeight: "600",
                           }}
                         >

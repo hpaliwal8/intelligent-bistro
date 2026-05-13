@@ -31,7 +31,8 @@ function getClient(): Anthropic {
  */
 export async function runChat(
   req: ChatRequest,
-  emit: (event: ChatStreamEvent) => Promise<void>
+  emit: (event: ChatStreamEvent) => Promise<void>,
+  signal?: AbortSignal
 ): Promise<void> {
   const client = getClient();
 
@@ -43,13 +44,16 @@ export async function runChat(
     { role: "user", content: req.message },
   ];
 
-  const stream = client.messages.stream({
-    model: DEFAULT_MODEL,
-    max_tokens: 1024,
-    system: buildSystemPrompt(req.cart),
-    tools: TOOLS,
-    messages,
-  });
+  const stream = client.messages.stream(
+    {
+      model: DEFAULT_MODEL,
+      max_tokens: 1024,
+      system: buildSystemPrompt(req.cart),
+      tools: TOOLS,
+      messages,
+    },
+    signal ? { signal } : undefined
+  );
 
   // Accumulate tool-use blocks across their input_json_delta events.
   type PendingToolUse = { name: string; inputJson: string };

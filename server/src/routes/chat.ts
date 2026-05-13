@@ -46,18 +46,27 @@ chatRoute.post("/", async (c) => {
 
   const request: ChatRequest = parsed.data;
 
+  // If the client disconnects mid-stream, abort the Anthropic call so we
+  // stop paying for tokens nobody will see.
+  const abort = new AbortController();
+  c.req.raw.signal?.addEventListener("abort", () => abort.abort(), { once: true });
+
   return streamSSE(c, async (stream) => {
     try {
       await runChat(request, async (event) => {
         await stream.writeSSE({ data: JSON.stringify(event) });
-      });
+      }, abort.signal);
     } catch (err) {
+      // Swallow abort errors silently — they're expected on disconnect.
+      if (abort.signal.aborted) return;
       const message = err instanceof Error ? err.message : "Unknown error";
       await stream.writeSSE({
         data: JSON.stringify({ type: "error", message }),
       });
     } finally {
-      await stream.writeSSE({ data: JSON.stringify({ type: "done" }) });
+      if (!abort.signal.aborted) {
+        await stream.writeSSE({ data: JSON.stringify({ type: "done" }) });
+      }
     }
   });
 });

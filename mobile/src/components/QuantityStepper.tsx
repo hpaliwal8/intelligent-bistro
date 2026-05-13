@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import { PlusIcon, MinusIcon } from "./Icons";
-import { colors } from "../theme";
+import { colors, fonts } from "../theme";
 
 interface Props {
   value: number;
@@ -62,6 +62,7 @@ export function QuantityStepper({
         style={{
           color: colors.text,
           fontSize,
+          fontFamily: fonts.bold,
           fontWeight: "700",
           minWidth: 22,
           textAlign: "center",

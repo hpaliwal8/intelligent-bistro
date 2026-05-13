@@ -7,6 +7,7 @@ import type { Category, MenuItem } from "../../../shared";
 import { MenuCard } from "../../src/components/MenuCard";
 import { CategoryStrip } from "../../src/components/CategoryStrip";
 import { ScreenHeader } from "../../src/components/ScreenHeader";
+import { PopularStrip } from "../../src/components/PopularStrip";
 import { colors } from "../../src/theme";
 
 export default function MenuScreen() {
@@ -31,6 +32,7 @@ export default function MenuScreen() {
             title="The Intelligent Bistro"
             subtitle="Browse the menu, or ask the assistant for recommendations."
           />
+          {active === "all" ? <PopularStrip /> : null}
           <View style={{ paddingBottom: 18 }}>
             <CategoryStrip active={active} onChange={setActive} />
           </View>

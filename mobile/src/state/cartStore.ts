@@ -11,6 +11,10 @@ import { findItem } from "../../../shared";
 
 interface CartState {
   lines: CartLine[];
+  // Transient: tracks which line the AI most recently touched, so consumers
+  // can pulse it. `nonce` bumps even when the same line is touched again,
+  // which is what the UI keys off of (not lineId equality alone).
+  lastAiTouched: { lineId: string | null; nonce: number };
 
   addItem: (
     itemId: string,
@@ -39,6 +43,7 @@ export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       lines: [],
+      lastAiTouched: { lineId: null, nonce: 0 },
 
       addItem: (itemId, quantity, modifiers, notes) => {
         const item = findItem(itemId);
@@ -80,22 +85,33 @@ export const useCart = create<CartState>()(
       clear: () => set({ lines: [] }),
 
       applyAiAction: (action) => {
+        const touched = (lineId: string | null) =>
+          set((s) => ({
+            lastAiTouched: { lineId, nonce: s.lastAiTouched.nonce + 1 },
+          }));
+
         switch (action.type) {
-          case "add_item":
-            return get().addItem(
+          case "add_item": {
+            const lineId = get().addItem(
               action.itemId,
               action.quantity,
               action.modifiers,
               action.notes
             );
+            touched(lineId);
+            return lineId;
+          }
           case "update_quantity":
             get().updateQuantity(action.lineId, action.quantity);
+            touched(action.lineId);
             return action.lineId;
           case "remove_line":
             get().removeLine(action.lineId);
+            touched(null);
             return action.lineId;
           case "clear_cart":
             get().clear();
+            touched(null);
             return null;
           default: {
             const _exhaustive: never = action;

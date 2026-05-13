@@ -1,7 +1,8 @@
-import { Text, View } from "react-native";
+import { Text } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import type { CartAction } from "../../../shared";
 import { findItem } from "../../../shared";
-import { colors } from "../theme";
+import { colors, fonts } from "../theme";
 import { PlusIcon, MinusIcon, TrashIcon, CheckIcon } from "./Icons";
 
 function labelFor(action: CartAction): { icon: React.ReactNode; text: string } {
@@ -35,7 +36,8 @@ function labelFor(action: CartAction): { icon: React.ReactNode; text: string } {
 export function ActionPill({ action }: { action: CartAction }) {
   const { icon, text } = labelFor(action);
   return (
-    <View
+    <Animated.View
+      entering={FadeIn.duration(220).springify().damping(14)}
       accessibilityLabel={text}
       style={{
         flexDirection: "row",
@@ -55,11 +57,12 @@ export function ActionPill({ action }: { action: CartAction }) {
         style={{
           color: colors.text,
           fontSize: 12,
+          fontFamily: fonts.semibold,
           fontWeight: "600",
         }}
       >
         {text}
       </Text>
-    </View>
+    </Animated.View>
   );
 }

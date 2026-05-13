@@ -1,6 +1,6 @@
 import { Pressable, ScrollView, Text } from "react-native";
 import * as Haptics from "expo-haptics";
-import { colors } from "../theme";
+import { colors, fonts } from "../theme";
 import type { Category } from "../../../shared";
 
 const CATEGORIES: { id: Category | "all"; label: string }[] = [
@@ -48,6 +48,7 @@ export function CategoryStrip({ active, onChange }: Props) {
             <Text
               style={{
                 color: isActive ? "#fff" : colors.text,
+                fontFamily: isActive ? fonts.bold : fonts.medium,
                 fontWeight: isActive ? "700" : "500",
                 fontSize: 13,
                 letterSpacing: 0.5,

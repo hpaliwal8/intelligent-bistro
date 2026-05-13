@@ -1,11 +1,16 @@
 import { Text, View } from "react-native";
 import type { ChatTurn } from "../state/chatStore";
-import { colors } from "../theme";
+import { colors, fonts } from "../theme";
 import { ActionPill } from "./ActionPill";
 
 export function ChatBubble({ turn }: { turn: ChatTurn }) {
   const isUser = turn.role === "user";
   const isError = turn.status === "error";
+
+  // Skip rendering an empty assistant bubble — the chat screen's
+  // TypingIndicator handles that state. We still render error rows below
+  // even when text is empty, so they're not gated on text length.
+  const showBubble = turn.text.length > 0 || isUser;
 
   return (
     <View
@@ -14,7 +19,7 @@ export function ChatBubble({ turn }: { turn: ChatTurn }) {
         alignItems: isUser ? "flex-end" : "flex-start",
       }}
     >
-      {turn.text.length > 0 || !isUser ? (
+      {showBubble ? (
         <View
           style={{
             maxWidth: "85%",
@@ -30,13 +35,17 @@ export function ChatBubble({ turn }: { turn: ChatTurn }) {
         >
           <Text
             selectable
+            accessibilityLiveRegion={
+              !isUser && turn.status === "streaming" ? "polite" : "none"
+            }
             style={{
               color: isUser ? "#fff" : colors.text,
               fontSize: 15,
               lineHeight: 22,
+              fontFamily: fonts.regular,
             }}
           >
-            {turn.text || (isError ? "" : "…")}
+            {turn.text}
           </Text>
         </View>
       ) : null}

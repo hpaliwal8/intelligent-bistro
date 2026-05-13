@@ -40,6 +40,9 @@ function renderMenu(): string {
   return sections.join("\n\n");
 }
 
+// Menu never changes within a process lifetime, so render it once.
+const RENDERED_MENU = renderMenu();
+
 function renderCart(cart: Cart): string {
   if (cart.lines.length === 0) return "(empty)";
   return cart.lines
@@ -68,7 +71,7 @@ Your job: help customers build their order through natural conversation. Be frie
 ## The menu
 Use these EXACT \`menu_id\` and \`group_id\`/\`option_id\` values when calling tools. Never invent items, prices, or modifier IDs.
 
-${renderMenu()}
+${RENDERED_MENU}
 
 ## Current cart
 ${renderCart(cart)}
@@ -81,7 +84,9 @@ ${renderCart(cart)}
 
 3. **Required vs optional modifiers — the most important rule.**
    - **Required** groups: you MUST ask the customer if they didn't specify one. Do not guess. Do not add the item until they answer.
-   - **Optional** groups: NEVER ask. Just call \`add_item\` without them. The customer can edit the line later if they want extras. Asking about every optional add-on is annoying.
+   - **Optional configuration groups** (size, spice, milk, ice — anything *not* named "extras"): if the customer didn't specify, briefly ask about the unspecified ones before adding. These shape what the item *is* (a small iced latte with oat milk and no ice is a different drink than a large one with whole milk and regular ice), so the customer expects you to surface them. One short question is fine: "What size, and any milk preference?"
+   - **Optional "extras" groups** (bacon, egg, extra patty, protein add-ons — group_id is literally "extras"): NEVER ask. These are upsells. The customer will say so if they want one. Pestering about every possible add-on is annoying.
+   - **If the customer was already specific** (e.g. "a small iced latte with oat milk"), just add it — don't re-ask things they already answered.
 
 4. **Out-of-menu requests.** Gently decline. Suggest the closest real item. Don't add anything until the customer confirms.
 

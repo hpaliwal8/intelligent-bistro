@@ -1,12 +1,12 @@
 import { Pressable, Text, View } from "react-native";
 import * as Haptics from "expo-haptics";
-import { colors } from "../theme";
+import { colors, fonts } from "../theme";
 
 const SUGGESTIONS = [
-  "Add two spicy chicken sandwiches, extra spicy",
-  "Surprise me with a vegetarian main and a side",
-  "I'd like a Smash Burger with bacon and an iced latte",
-  "What's popular?",
+  "Two spicy chicken sandwiches, extra spicy",
+  "Surprise me with a vegetarian main",
+  "Smash burger with bacon and an iced latte",
+  "What's on the menu tonight?",
 ];
 
 export function SuggestedPrompts({
@@ -21,6 +21,7 @@ export function SuggestedPrompts({
           color: colors.muted,
           fontSize: 11,
           letterSpacing: 2,
+          fontFamily: fonts.semibold,
           fontWeight: "600",
           textTransform: "uppercase",
           marginBottom: 2,
@@ -47,7 +48,14 @@ export function SuggestedPrompts({
             opacity: pressed ? 0.7 : 1,
           })}
         >
-          <Text style={{ color: colors.text, fontSize: 14, lineHeight: 20 }}>
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: 14,
+              lineHeight: 20,
+              fontFamily: fonts.regular,
+            }}
+          >
             {s}
           </Text>
         </Pressable>

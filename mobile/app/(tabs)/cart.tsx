@@ -7,7 +7,7 @@ import { CartLineRow } from "../../src/components/CartLineRow";
 import { Button } from "../../src/components/Button";
 import { ScreenHeader } from "../../src/components/ScreenHeader";
 import { cartTotal, formatPrice } from "../../src/utils/price";
-import { colors } from "../../src/theme";
+import { colors, fonts } from "../../src/theme";
 
 export default function CartScreen() {
   const insets = useSafeAreaInsets();
@@ -55,6 +55,7 @@ export default function CartScreen() {
             style={{
               color: colors.text,
               fontSize: 18,
+              fontFamily: fonts.bold,
               fontWeight: "700",
               marginBottom: 8,
             }}
@@ -66,6 +67,7 @@ export default function CartScreen() {
               color: colors.muted,
               textAlign: "center",
               lineHeight: 20,
+              fontFamily: fonts.regular,
             }}
           >
             Browse the menu, or ask the assistant for a recommendation.
@@ -144,6 +146,7 @@ function Row({
         style={{
           color: isMuted ? colors.muted : colors.text,
           fontSize: isTotal ? 16 : 14,
+          fontFamily: isTotal ? fonts.bold : fonts.medium,
           fontWeight: isTotal ? "700" : "500",
         }}
       >
@@ -157,6 +160,7 @@ function Row({
               ? colors.muted
               : colors.text,
           fontSize: isTotal ? 18 : 14,
+          fontFamily: isTotal ? fonts.extrabold : fonts.semibold,
           fontWeight: isTotal ? "800" : "600",
         }}
       >

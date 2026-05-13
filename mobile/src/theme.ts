@@ -10,3 +10,14 @@ export const colors = {
   success: "#7BB46A",
   danger: "#D26464",
 };
+
+// Resolved family names for the Inter weights loaded by @expo-google-fonts.
+// Keep weight numbers on each Text style as a fallback; iOS prefers fontFamily
+// when both are set, but Android can fall back to weight if family is missing.
+export const fonts = {
+  regular: "Inter_400Regular",
+  medium: "Inter_500Medium",
+  semibold: "Inter_600SemiBold",
+  bold: "Inter_700Bold",
+  extrabold: "Inter_800ExtraBold",
+};

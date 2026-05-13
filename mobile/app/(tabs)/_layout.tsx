@@ -1,19 +1,32 @@
+import { useEffect } from "react";
 import { Tabs } from "expo-router";
 import { Text, View } from "react-native";
 import { BlurView } from "expo-blur";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCart } from "../../src/state/cartStore";
-import { colors } from "../../src/theme";
+import { colors, fonts } from "../../src/theme";
 
-function TabIcon({ label, focused }: { label: string; focused: boolean }) {
+function TabLabel({ label, focused }: { label: string; focused: boolean }) {
   return (
     <Text
+      numberOfLines={1}
+      allowFontScaling={false}
       style={{
         color: focused ? colors.accent : colors.muted,
         fontSize: 11,
-        letterSpacing: 1.2,
+        letterSpacing: 1.4,
+        fontFamily: focused ? fonts.bold : fonts.medium,
         fontWeight: focused ? "700" : "500",
         textTransform: "uppercase",
+        textAlign: "center",
+        paddingHorizontal: 4,
       }}
     >
       {label}
@@ -23,41 +36,74 @@ function TabIcon({ label, focused }: { label: string; focused: boolean }) {
 
 function CartBadge() {
   const count = useCart((s) => s.lines.reduce((n, l) => n + l.quantity, 0));
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    if (count > 0) {
+      scale.value = withSequence(
+        withTiming(1.35, { duration: 130 }),
+        withSpring(1, { damping: 9, stiffness: 240 })
+      );
+    }
+  }, [count, scale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
   if (count === 0) return null;
   return (
-    <View
+    <Animated.View
       accessibilityLabel={`${count} items in cart`}
-      style={{
-        position: "absolute",
-        top: -4,
-        right: -14,
-        minWidth: 18,
-        height: 18,
-        borderRadius: 9,
-        backgroundColor: colors.accent,
-        paddingHorizontal: 5,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+      style={[
+        {
+          position: "absolute",
+          top: -6,
+          right: -4,
+          minWidth: 16,
+          height: 16,
+          borderRadius: 8,
+          backgroundColor: colors.accent,
+          paddingHorizontal: 4,
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        animatedStyle,
+      ]}
     >
-      <Text style={{ color: "#fff", fontSize: 10, fontWeight: "700" }}>
+      <Text
+        allowFontScaling={false}
+        style={{
+          color: "#fff",
+          fontSize: 9,
+          fontFamily: fonts.bold,
+          fontWeight: "700",
+        }}
+      >
         {count}
       </Text>
+    </Animated.View>
+  );
+}
+
+function CartTabLabel({ focused }: { focused: boolean }) {
+  return (
+    <View style={{ position: "relative" }}>
+      <TabLabel label="Cart" focused={focused} />
+      <CartBadge />
     </View>
   );
 }
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  // Bar visual height is constant; we add bottom inset as padding so the
-  // home indicator never crowds the touch targets.
-  const BAR_HEIGHT = 64;
+  const BAR_HEIGHT = 56;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
         tabBarStyle: {
           position: "absolute",
           left: 0,
@@ -67,8 +113,11 @@ export default function TabsLayout() {
           backgroundColor: "transparent",
           elevation: 0,
           height: BAR_HEIGHT + insets.bottom,
-          paddingTop: 10,
+          paddingTop: 14,
           paddingBottom: insets.bottom,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 0,
         },
         tabBarBackground: () => (
           <BlurView
@@ -92,15 +141,19 @@ export default function TabsLayout() {
         name="index"
         options={{
           tabBarAccessibilityLabel: "Menu tab",
-          tabBarIcon: ({ focused }) => <TabIcon label="Menu" focused={focused} />,
+          tabBarIcon: () => null,
+          tabBarLabel: ({ focused }) => (
+            <TabLabel label="Menu" focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="chat"
         options={{
           tabBarAccessibilityLabel: "Assistant tab",
-          tabBarIcon: ({ focused }) => (
-            <TabIcon label="Assistant" focused={focused} />
+          tabBarIcon: () => null,
+          tabBarLabel: ({ focused }) => (
+            <TabLabel label="Assistant" focused={focused} />
           ),
         }}
       />
@@ -108,12 +161,8 @@ export default function TabsLayout() {
         name="cart"
         options={{
           tabBarAccessibilityLabel: "Cart tab",
-          tabBarIcon: ({ focused }) => (
-            <View>
-              <TabIcon label="Cart" focused={focused} />
-              <CartBadge />
-            </View>
-          ),
+          tabBarIcon: () => null,
+          tabBarLabel: ({ focused }) => <CartTabLabel focused={focused} />,
         }}
       />
     </Tabs>
