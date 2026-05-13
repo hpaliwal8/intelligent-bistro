@@ -1,6 +1,7 @@
 import { Tabs } from "expo-router";
 import { Text, View } from "react-native";
 import { BlurView } from "expo-blur";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCart } from "../../src/state/cartStore";
 import { colors } from "../../src/theme";
 
@@ -25,6 +26,7 @@ function CartBadge() {
   if (count === 0) return null;
   return (
     <View
+      accessibilityLabel={`${count} items in cart`}
       style={{
         position: "absolute",
         top: -4,
@@ -46,6 +48,11 @@ function CartBadge() {
 }
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  // Bar visual height is constant; we add bottom inset as padding so the
+  // home indicator never crowds the touch targets.
+  const BAR_HEIGHT = 64;
+
   return (
     <Tabs
       screenOptions={{
@@ -59,8 +66,9 @@ export default function TabsLayout() {
           borderTopWidth: 0,
           backgroundColor: "transparent",
           elevation: 0,
-          height: 88,
-          paddingTop: 12,
+          height: BAR_HEIGHT + insets.bottom,
+          paddingTop: 10,
+          paddingBottom: insets.bottom,
         },
         tabBarBackground: () => (
           <BlurView
@@ -83,18 +91,23 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          tabBarAccessibilityLabel: "Menu tab",
           tabBarIcon: ({ focused }) => <TabIcon label="Menu" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="chat"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Assistant" focused={focused} />,
+          tabBarAccessibilityLabel: "Assistant tab",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon label="Assistant" focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="cart"
         options={{
+          tabBarAccessibilityLabel: "Cart tab",
           tabBarIcon: ({ focused }) => (
             <View>
               <TabIcon label="Cart" focused={focused} />

@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
-import type { ChatRequest } from "../../../shared/types";
+import type { ChatRequest } from "../../../shared";
+import { runChat } from "../ai/runChat";
 
 export const chatRoute = new Hono();
 
@@ -28,17 +29,24 @@ const ChatRequestSchema = z.object({
   ),
 });
 
+const isDev = process.env.NODE_ENV !== "production";
+
 chatRoute.post("/", async (c) => {
   const body = await c.req.json().catch(() => null);
   const parsed = ChatRequestSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json({ error: "Invalid request", issues: parsed.error.issues }, 400);
+    return c.json(
+      {
+        error: "Invalid request",
+        ...(isDev ? { issues: parsed.error.issues } : {}),
+      },
+      400
+    );
   }
 
-  const request = parsed.data as unknown as ChatRequest;
+  const request: ChatRequest = parsed.data;
 
   return streamSSE(c, async (stream) => {
-    const { runChat } = await import("../ai/runChat");
     try {
       await runChat(request, async (event) => {
         await stream.writeSSE({ data: JSON.stringify(event) });

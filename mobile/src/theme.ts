@@ -10,15 +10,3 @@ export const colors = {
   success: "#7BB46A",
   danger: "#D26464",
 };
-
-export const radii = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
-  pill: 999,
-};
-
-export function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
-}

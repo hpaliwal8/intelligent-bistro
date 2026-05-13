@@ -1,27 +1,54 @@
-import { ScrollView, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { FlatList, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { MENU } from "../../../shared";
+import type { Category, MenuItem } from "../../../shared";
+import { MenuCard } from "../../src/components/MenuCard";
+import { CategoryStrip } from "../../src/components/CategoryStrip";
+import { ScreenHeader } from "../../src/components/ScreenHeader";
+import { colors } from "../../src/theme";
 
 export default function MenuScreen() {
   const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
+  const [active, setActive] = useState<Category | "all">("all");
+
+  const items = useMemo<MenuItem[]>(() => {
+    if (active === "all") return MENU;
+    return MENU.filter((m) => m.category === active);
+  }, [active]);
+
   return (
-    <ScrollView
-      className="flex-1 bg-bistro-bg"
-      contentContainerStyle={{ paddingTop: insets.top + 16, paddingBottom: 120 }}
-    >
-      <View className="px-6 pb-4">
-        <Text className="text-bistro-muted text-xs uppercase tracking-[2px]">
-          Tonight at
+    <FlatList
+      data={items}
+      keyExtractor={(i) => i.id}
+      renderItem={({ item }) => <MenuCard item={item} />}
+      ListHeaderComponent={
+        <View style={{ paddingTop: insets.top + 12 }}>
+          <ScreenHeader
+            eyebrow="Tonight at"
+            title="The Intelligent Bistro"
+            subtitle="Browse the menu, or ask the assistant for recommendations."
+          />
+          <View style={{ paddingBottom: 18 }}>
+            <CategoryStrip active={active} onChange={setActive} />
+          </View>
+        </View>
+      }
+      ListEmptyComponent={
+        <Text
+          style={{ color: colors.muted, textAlign: "center", marginTop: 40 }}
+        >
+          Nothing here yet.
         </Text>
-        <Text className="text-bistro-text text-4xl font-bold mt-1">
-          The Intelligent Bistro
-        </Text>
-        <Text className="text-bistro-muted mt-2 text-base">
-          Browse the menu, or ask the assistant for recommendations.
-        </Text>
-      </View>
-      <View className="px-6 mt-8">
-        <Text className="text-bistro-text text-lg">Menu coming on Day 2.</Text>
-      </View>
-    </ScrollView>
+      }
+      contentContainerStyle={{
+        paddingBottom: tabBarHeight + 24,
+        backgroundColor: colors.bg,
+      }}
+      style={{ backgroundColor: colors.bg }}
+      showsVerticalScrollIndicator={false}
+    />
   );
 }

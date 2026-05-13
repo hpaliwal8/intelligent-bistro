@@ -3,17 +3,14 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import uuid from "react-native-uuid";
 import type {
-  Cart,
   CartLine,
   CartAction,
   SelectedModifier,
-} from "../shared/types";
-import { findItem } from "../shared/types";
+} from "../../../shared";
+import { findItem } from "../../../shared";
 
 interface CartState {
   lines: CartLine[];
-  // Animated "recently changed" line IDs for UI highlights.
-  recentlyChanged: Set<string>;
 
   addItem: (
     itemId: string,
@@ -25,50 +22,44 @@ interface CartState {
   removeLine: (lineId: string) => void;
   clear: () => void;
   applyAiAction: (action: CartAction) => string | null;
-  clearRecent: () => void;
-  getCart: () => Cart;
 }
 
-function modsKey(mods: SelectedModifier[]): string {
-  return [...mods]
+// Lines merge only when item, modifiers, AND notes all match. Notes-bearing
+// lines are intentionally kept distinct so a "no onions" line never collapses
+// into a plain one even if a later add happens to share modifiers.
+function dedupeKey(itemId: string, mods: SelectedModifier[], notes?: string): string {
+  const modPart = [...mods]
     .map((m) => `${m.groupId}:${m.optionId}`)
     .sort()
     .join("|");
+  return `${itemId}::${modPart}::${notes ?? ""}`;
 }
 
 export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       lines: [],
-      recentlyChanged: new Set<string>(),
 
       addItem: (itemId, quantity, modifiers, notes) => {
         const item = findItem(itemId);
         if (!item) return null;
-        const key = modsKey(modifiers);
+        const key = dedupeKey(itemId, modifiers, notes);
         const existing = get().lines.find(
-          (l) =>
-            l.itemId === itemId && modsKey(l.modifiers) === key && !l.notes && !notes
+          (l) => dedupeKey(l.itemId, l.modifiers, l.notes) === key
         );
         if (existing) {
-          const updated = { ...existing, quantity: existing.quantity + quantity };
           set((s) => ({
-            lines: s.lines.map((l) => (l.lineId === existing.lineId ? updated : l)),
-            recentlyChanged: new Set(s.recentlyChanged).add(existing.lineId),
+            lines: s.lines.map((l) =>
+              l.lineId === existing.lineId
+                ? { ...l, quantity: l.quantity + quantity }
+                : l
+            ),
           }));
           return existing.lineId;
         }
         const lineId = String(uuid.v4());
-        const newLine: CartLine = {
-          lineId,
-          itemId,
-          quantity,
-          modifiers,
-          notes,
-        };
         set((s) => ({
-          lines: [...s.lines, newLine],
-          recentlyChanged: new Set(s.recentlyChanged).add(lineId),
+          lines: [...s.lines, { lineId, itemId, quantity, modifiers, notes }],
         }));
         return lineId;
       },
@@ -81,15 +72,12 @@ export const useCart = create<CartState>()(
               : s.lines.map((l) =>
                   l.lineId === lineId ? { ...l, quantity } : l
                 ),
-          recentlyChanged: new Set(s.recentlyChanged).add(lineId),
         })),
 
       removeLine: (lineId) =>
-        set((s) => ({
-          lines: s.lines.filter((l) => l.lineId !== lineId),
-        })),
+        set((s) => ({ lines: s.lines.filter((l) => l.lineId !== lineId) })),
 
-      clear: () => set({ lines: [], recentlyChanged: new Set() }),
+      clear: () => set({ lines: [] }),
 
       applyAiAction: (action) => {
         switch (action.type) {
@@ -109,17 +97,25 @@ export const useCart = create<CartState>()(
           case "clear_cart":
             get().clear();
             return null;
+          default: {
+            const _exhaustive: never = action;
+            return _exhaustive;
+          }
         }
       },
-
-      clearRecent: () => set({ recentlyChanged: new Set() }),
-
-      getCart: () => ({ lines: get().lines }),
     }),
     {
       name: "bistro-cart",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({ lines: s.lines }),
+      version: 1,
+      // Drop any persisted lines that no longer reference a known menu item.
+      // This protects users on app updates where item IDs change between versions.
+      migrate: (persisted: unknown, _version) => {
+        const state = (persisted ?? {}) as Partial<{ lines: CartLine[] }>;
+        const lines = (state.lines ?? []).filter((l) => findItem(l.itemId));
+        return { lines } as Partial<CartState>;
+      },
     }
   )
 );

@@ -1,21 +1,166 @@
-import { Text, View } from "react-native";
+import { Alert, FlatList, Text, View } from "react-native";
+import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useCart } from "../../src/state/cartStore";
+import { CartLineRow } from "../../src/components/CartLineRow";
+import { Button } from "../../src/components/Button";
+import { ScreenHeader } from "../../src/components/ScreenHeader";
+import { cartTotal, formatPrice } from "../../src/utils/price";
+import { colors } from "../../src/theme";
 
 export default function CartScreen() {
   const insets = useSafeAreaInsets();
-  const count = useCart((s) => s.lines.reduce((n, l) => n + l.quantity, 0));
+  const tabBarHeight = useBottomTabBarHeight();
+  const lines = useCart((s) => s.lines);
+  const clear = useCart((s) => s.clear);
+
+  const { subtotal, tax, total } = cartTotal(lines);
+  const count = lines.reduce((n, l) => n + l.quantity, 0);
+
+  const placeOrder = () => {
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Alert.alert(
+      "Order placed",
+      `${count} item${count === 1 ? "" : "s"} • ${formatPrice(total)}\n\nThanks — we'll have it ready shortly.`,
+      [{ text: "OK", onPress: clear }]
+    );
+  };
+
   return (
     <View
-      className="flex-1 bg-bistro-bg px-6"
-      style={{ paddingTop: insets.top + 16 }}
+      style={{
+        flex: 1,
+        backgroundColor: colors.bg,
+        paddingTop: insets.top + 12,
+      }}
     >
-      <Text className="text-bistro-muted text-xs uppercase tracking-[2px]">
-        Your Order
+      <ScreenHeader
+        eyebrow="Your Order"
+        title="Cart"
+        subtitle={count > 0 ? `${count} item${count === 1 ? "" : "s"}` : undefined}
+      />
+
+      {lines.length === 0 ? (
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 32,
+            paddingBottom: 100,
+          }}
+        >
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: 18,
+              fontWeight: "700",
+              marginBottom: 8,
+            }}
+          >
+            Your cart is empty.
+          </Text>
+          <Text
+            style={{
+              color: colors.muted,
+              textAlign: "center",
+              lineHeight: 20,
+            }}
+          >
+            Browse the menu, or ask the assistant for a recommendation.
+          </Text>
+        </View>
+      ) : (
+        <>
+          <FlatList
+            style={{ flex: 1 }}
+            data={lines}
+            keyExtractor={(l) => l.lineId}
+            renderItem={({ item }) => <CartLineRow line={item} />}
+            contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 16 }}
+            showsVerticalScrollIndicator={false}
+          />
+          <View
+            style={{
+              paddingHorizontal: 24,
+              paddingTop: 12,
+              paddingBottom: tabBarHeight + 16,
+              borderTopWidth: 1,
+              borderTopColor: colors.border,
+              backgroundColor: colors.bg,
+            }}
+          >
+            <Row label="Subtotal" value={formatPrice(subtotal)} />
+            <Row label="Tax" value={formatPrice(tax)} variant="muted" />
+            <View
+              style={{
+                height: 1,
+                backgroundColor: colors.border,
+                marginVertical: 10,
+              }}
+            />
+            <Row label="Total" value={formatPrice(total)} variant="total" />
+            <View style={{ height: 16 }} />
+            <Button
+              label="Place Order"
+              onPress={placeOrder}
+              accessibilityHint="Submits your current order"
+            />
+            <View style={{ height: 10 }} />
+            <Button
+              label="Clear Cart"
+              variant="destructive"
+              onPress={clear}
+              accessibilityHint="Removes all items from your cart"
+            />
+          </View>
+        </>
+      )}
+    </View>
+  );
+}
+
+function Row({
+  label,
+  value,
+  variant = "default",
+}: {
+  label: string;
+  value: string;
+  variant?: "default" | "muted" | "total";
+}) {
+  const isTotal = variant === "total";
+  const isMuted = variant === "muted";
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        justifyContent: "space-between",
+        paddingVertical: 3,
+      }}
+    >
+      <Text
+        style={{
+          color: isMuted ? colors.muted : colors.text,
+          fontSize: isTotal ? 16 : 14,
+          fontWeight: isTotal ? "700" : "500",
+        }}
+      >
+        {label}
       </Text>
-      <Text className="text-bistro-text text-3xl font-bold mt-1">Cart</Text>
-      <Text className="text-bistro-muted mt-4">
-        {count === 0 ? "Empty for now." : `${count} item(s) — UI on Day 2.`}
+      <Text
+        style={{
+          color: isTotal
+            ? colors.accentSoft
+            : isMuted
+              ? colors.muted
+              : colors.text,
+          fontSize: isTotal ? 18 : 14,
+          fontWeight: isTotal ? "800" : "600",
+        }}
+      >
+        {value}
       </Text>
     </View>
   );

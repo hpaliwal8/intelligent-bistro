@@ -31,8 +31,11 @@ export interface MenuItem {
   modifiers: ModifierGroup[];
 }
 
+// `groupId` is a plain string here (not the literal `ModifierGroupId` union)
+// because selections originate from user / AI input and only need to match a
+// known group at validation time, not at the type level.
 export interface SelectedModifier {
-  groupId: ModifierGroupId;
+  groupId: string;
   optionId: string;
 }
 

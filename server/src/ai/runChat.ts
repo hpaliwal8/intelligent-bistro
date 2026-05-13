@@ -1,4 +1,4 @@
-import type { ChatRequest, ChatStreamEvent } from "../../../shared/types";
+import type { ChatRequest, ChatStreamEvent } from "../../../shared";
 
 // Placeholder until Day 3 — echoes a friendly stub so the wire is testable.
 // Will be replaced with a real Anthropic streaming + tool-use implementation.
