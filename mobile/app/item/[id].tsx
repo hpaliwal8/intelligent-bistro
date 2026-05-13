@@ -12,7 +12,7 @@ import {
 } from "../../../shared";
 import { colors, fonts } from "../../src/theme";
 import { unitPrice, formatPrice } from "../../src/utils/price";
-import { MENU_IMAGE_PLACEHOLDER } from "../../src/utils/menuImages";
+import { MENU_IMAGE_PLACEHOLDER, menuImageSource } from "../../src/utils/menuImages";
 import { Button } from "../../src/components/Button";
 import { QuantityStepper } from "../../src/components/QuantityStepper";
 import { CloseIcon, CheckIcon } from "../../src/components/Icons";
@@ -86,7 +86,7 @@ export default function ItemDetail() {
       >
         <View style={{ position: "relative" }}>
           <Image
-            source={{ uri: item.image }}
+            source={menuImageSource(item.id, item.image)}
             placeholder={{ blurhash: MENU_IMAGE_PLACEHOLDER }}
             style={{
               width: "100%",

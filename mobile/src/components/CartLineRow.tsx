@@ -13,7 +13,7 @@ import type { CartLine } from "../../../shared";
 import { findItem } from "../../../shared";
 import { colors, fonts } from "../theme";
 import { unitPrice, formatPrice } from "../utils/price";
-import { MENU_IMAGE_PLACEHOLDER } from "../utils/menuImages";
+import { MENU_IMAGE_PLACEHOLDER, menuImageSource } from "../utils/menuImages";
 import { QuantityStepper } from "./QuantityStepper";
 import { TrashIcon } from "./Icons";
 import { useCart } from "../state/cartStore";
@@ -75,7 +75,7 @@ export function CartLineRow({ line }: { line: CartLine }) {
       ]}
     >
       <Image
-        source={{ uri: item.image }}
+        source={menuImageSource(item.id, item.image)}
         placeholder={{ blurhash: MENU_IMAGE_PLACEHOLDER }}
         style={{
           width: 72,

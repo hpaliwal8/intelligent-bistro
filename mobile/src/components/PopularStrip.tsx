@@ -7,7 +7,7 @@ import type { MenuItem } from "../../../shared";
 import { MENU } from "../../../shared";
 import { colors, fonts } from "../theme";
 import { formatPrice } from "../utils/price";
-import { MENU_IMAGE_PLACEHOLDER } from "../utils/menuImages";
+import { MENU_IMAGE_PLACEHOLDER, menuImageSource } from "../utils/menuImages";
 
 const POPULAR: MenuItem[] = MENU.filter((m) => m.tags.includes("popular"));
 
@@ -34,7 +34,7 @@ function HeroCard({ item }: { item: MenuItem }) {
       })}
     >
       <Image
-        source={{ uri: item.image }}
+        source={menuImageSource(item.id, item.image)}
         placeholder={{ blurhash: MENU_IMAGE_PLACEHOLDER }}
         style={{ width: "100%", height: "100%" }}
         contentFit="cover"

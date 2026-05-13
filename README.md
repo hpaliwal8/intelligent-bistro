@@ -59,7 +59,7 @@ For physical-device testing instead of Simulator, install **Expo Go** from the A
 
 ## Stack
 
-- **Mobile:** Expo SDK 54, React Native 0.81, TypeScript strict, Zustand (cart + chat state), `expo-image` (disk-cached with blurhash placeholders), `react-native-sse` (SSE consumer), `react-native-reanimated` (animations), `expo-haptics`
+- **Mobile:** Expo SDK 54, React Native 0.81, TypeScript strict, Zustand (cart + chat state with versioned `migrate`), `expo-image` (bundled local menu assets + blurhash placeholders), `react-native-sse` (SSE consumer), `react-native-reanimated` (Button presses, cart-line pulse, splash, badge bounce), `expo-haptics`, Inter via `@expo-google-fonts/inter`
 - **Backend:** Node.js + Hono (HTTP), `@anthropic-ai/sdk` (Claude Sonnet 4.6), Zod (request + tool-call validation), Hono's `streamSSE` (server-sent events)
 - **Shared:** TypeScript types and the static menu JSON live in `shared/`, consumed by both projects via a workspace folder
 
@@ -87,19 +87,20 @@ intelligent-bistro/
 │   └── .env.example
 └── mobile/
     ├── app/                      # expo-router file-based routing
-    │   ├── _layout.tsx           # Root Stack + image prefetch on mount
+    │   ├── _layout.tsx           # Root Stack + font loading + BistroSplash overlay
     │   ├── (tabs)/
-    │   │   ├── _layout.tsx       # Tab navigator with BlurView background
-    │   │   ├── index.tsx         # Menu browse
+    │   │   ├── _layout.tsx       # Tab navigator with BlurView background + animated cart badge
+    │   │   ├── index.tsx         # Menu browse (with "Tonight's picks" hero strip)
     │   │   ├── chat.tsx          # AI assistant
     │   │   └── cart.tsx          # Cart screen
     │   └── item/[id].tsx         # Item detail modal w/ modifier picker
+    ├── assets/menu/              # 15 bundled menu images (no Unsplash dependency)
     └── src/
-        ├── api/chat.ts           # SSE client
-        ├── components/           # MenuCard, CartLineRow, ChatBubble, …
-        ├── state/                # cartStore.ts, chatStore.ts (Zustand)
-        ├── utils/                # price.ts, menuImages.ts
-        └── theme.ts              # Color palette
+        ├── api/chat.ts           # SSE client (react-native-sse)
+        ├── components/           # MenuCard, CartLineRow, ChatBubble, BistroSplash, PopularStrip, …
+        ├── state/                # cartStore.ts (+ .test.ts), chatStore.ts
+        ├── utils/                # price.ts, menuImages.ts (local asset map)
+        └── theme.ts              # Colors + Inter font family map
 ```
 
 ---
@@ -150,10 +151,28 @@ npx tsx scripts/test-ai-plumbing.ts
 cd mobile
 npx tsc --noEmit
 npx expo-doctor               # → 17/17 checks passed
+npm test                      # → 14 cart-store unit tests
 npx expo export --platform ios --output-dir /tmp/bundle-check
 ```
 
 Or skip straight to running it — the doctor / bundle checks are belt-and-braces.
+
+---
+
+## For a clean cold-start (Loom recording)
+
+The quick-start above uses **Expo Go**, which shows its own white launch screen with your app's icon before our JS loads. Fine for development, but you'll see a brief flash that isn't ours.
+
+For a polished cold-start where the iOS launch screen is *already* our dark bistro background, build a custom dev client once:
+
+```bash
+cd mobile
+npx expo run:ios     # ~5-10 min first build; installs a standalone dev binary
+```
+
+After that, tapping the app icon in the Simulator gives the end-to-end branded launch: dark splash → animated flame + wordmark → cross-fade to menu. Use `npx expo start --dev-client` for fast-refresh while iterating.
+
+Requires Xcode + CocoaPods + the iOS simulator runtime that matches your Xcode SDK (e.g. iOS 18.x). If `expo run:ios` complains about a missing destination, run `xcodebuild -downloadPlatform iOS` to install the runtime.
 
 ---
 
@@ -195,9 +214,12 @@ Or skip straight to running it — the doctor / bundle checks are belt-and-brace
 ### Mobile (`cd mobile`)
 | Command | Purpose |
 |---|---|
-| `npx expo start --ios` | Run on iOS Simulator |
+| `npx expo start --ios` | Run on iOS Simulator via Expo Go (fast iteration) |
+| `npx expo run:ios` | Build standalone dev client (clean cold-start; ~5-10 min first time) |
+| `npx expo start --dev-client` | Fast-refresh Metro server for an installed dev client |
 | `npx expo start` then scan QR with Expo Go | Run on physical device |
 | `npx expo start --clear` | Reset Metro cache (when things get weird) |
 | `npx expo-doctor` | Check Expo SDK dep health (17 checks) |
 | `npx tsc --noEmit` | Typecheck |
+| `npm test` | Run cart-store unit tests (14 cases) |
 | `npx expo export --platform ios --output-dir /tmp/x` | Produce a Hermes bundle without launching the Simulator |

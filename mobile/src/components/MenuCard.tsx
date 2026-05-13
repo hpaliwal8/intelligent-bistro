@@ -6,7 +6,7 @@ import { router } from "expo-router";
 import type { MenuItem } from "../../../shared";
 import { colors, fonts } from "../theme";
 import { formatPrice } from "../utils/price";
-import { MENU_IMAGE_PLACEHOLDER } from "../utils/menuImages";
+import { MENU_IMAGE_PLACEHOLDER, menuImageSource } from "../utils/menuImages";
 
 export function MenuCard({ item }: { item: MenuItem }) {
   const onPress = () => {
@@ -32,7 +32,7 @@ export function MenuCard({ item }: { item: MenuItem }) {
     >
       <View style={{ position: "relative" }}>
         <Image
-          source={{ uri: item.image }}
+          source={menuImageSource(item.id, item.image)}
           placeholder={{ blurhash: MENU_IMAGE_PLACEHOLDER }}
           style={{ width: "100%", height: 180, backgroundColor: colors.surface }}
           contentFit="cover"
