@@ -88,7 +88,15 @@ export const useCart = create<CartState>()(
                 ),
         })),
 
-      updateLine: (lineId, next) =>
+      updateLine: (lineId, next) => {
+        // Defensive: any caller that passes quantity ≤ 0 is treated as a
+        // remove, so we never leave a zero-quantity line in the cart.
+        if (next.quantity <= 0) {
+          set((s) => ({
+            lines: s.lines.filter((l) => l.lineId !== lineId),
+          }));
+          return;
+        }
         set((s) => ({
           lines: s.lines.map((l) =>
             l.lineId === lineId
@@ -100,7 +108,8 @@ export const useCart = create<CartState>()(
                 }
               : l
           ),
-        })),
+        }));
+      },
 
       removeLine: (lineId) =>
         set((s) => ({ lines: s.lines.filter((l) => l.lineId !== lineId) })),
@@ -126,6 +135,14 @@ export const useCart = create<CartState>()(
           }
           case "update_quantity":
             get().updateQuantity(action.lineId, action.quantity);
+            touched(action.lineId);
+            return action.lineId;
+          case "update_line":
+            get().updateLine(action.lineId, {
+              modifiers: action.modifiers,
+              quantity: action.quantity,
+              notes: action.notes,
+            });
             touched(action.lineId);
             return action.lineId;
           case "remove_line":

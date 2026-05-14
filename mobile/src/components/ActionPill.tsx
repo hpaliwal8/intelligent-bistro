@@ -20,6 +20,11 @@ function labelFor(action: CartAction): { icon: React.ReactNode; text: string } {
         icon: <CheckIcon size={12} color={colors.accentSoft} />,
         text: `Updated quantity to ${action.quantity}`,
       };
+    case "update_line":
+      return {
+        icon: <CheckIcon size={12} color={colors.accentSoft} />,
+        text: `Updated item`,
+      };
     case "remove_line":
       return {
         icon: <MinusIcon size={12} color={colors.danger} />,

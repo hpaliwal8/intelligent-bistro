@@ -27,7 +27,9 @@ function cartDigest(cart: Cart): string {
         })
         .filter(Boolean)
         .join(", ");
-      return `${l.quantity}× ${name}${mods ? ` (${mods})` : ""}`;
+      // Include notes so the AI can preserve them on update_line.
+      const notes = l.notes ? ` note:"${l.notes}"` : "";
+      return `${l.quantity}× ${name}${mods ? ` (${mods})` : ""}${notes}`;
     })
     .join("; ");
 }

@@ -76,6 +76,17 @@ export type CartAction =
       notes?: string;
     }
   | { type: "update_quantity"; lineId: string; quantity: number }
+  | {
+      // Replace an existing line's modifiers/quantity/notes in one atomic op.
+      // Used when the customer changes an item's configuration (size, milk,
+      // spice, etc.) — preserves the lineId so animations and references stay
+      // intact instead of fragmenting into remove+add.
+      type: "update_line";
+      lineId: string;
+      quantity: number;
+      modifiers: SelectedModifier[];
+      notes?: string;
+    }
   | { type: "remove_line"; lineId: string }
   | { type: "clear_cart" };
 

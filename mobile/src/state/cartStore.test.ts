@@ -133,6 +133,42 @@ describe("cartStore", () => {
       expect(useCart.getState().lines).toHaveLength(0);
     });
 
+    it("dispatches update_line (replaces modifiers + quantity, preserves lineId)", () => {
+      const lineId = useCart.getState().addItem(LATTE, 1, [
+        { groupId: "size", optionId: "small" },
+        { groupId: "milk", optionId: "whole" },
+      ])!;
+      const action: CartAction = {
+        type: "update_line",
+        lineId,
+        quantity: 2,
+        modifiers: [
+          { groupId: "size", optionId: "large" },
+          { groupId: "milk", optionId: "oat" },
+        ],
+      };
+      const returned = useCart.getState().applyAiAction(action);
+      expect(returned).toBe(lineId);
+      const line = useCart.getState().lines[0];
+      expect(line?.lineId).toBe(lineId); // lineId preserved
+      expect(line?.quantity).toBe(2);
+      expect(line?.modifiers).toContainEqual({
+        groupId: "size",
+        optionId: "large",
+      });
+      expect(line?.modifiers).toContainEqual({
+        groupId: "milk",
+        optionId: "oat",
+      });
+      expect(useCart.getState().lastAiTouched.lineId).toBe(lineId);
+    });
+
+    it("update_line with quantity 0 removes the line (defensive guard)", () => {
+      const lineId = useCart.getState().addItem(BURGER, 1, [])!;
+      useCart.getState().updateLine(lineId, { modifiers: [], quantity: 0 });
+      expect(useCart.getState().lines).toHaveLength(0);
+    });
+
     it("dispatches clear_cart", () => {
       useCart.getState().addItem(BURGER, 1, []);
       useCart.getState().addItem(LATTE, 1, [

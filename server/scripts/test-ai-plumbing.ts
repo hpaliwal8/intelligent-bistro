@@ -35,16 +35,22 @@ const cartWithBurger: Cart = {
 };
 
 console.log("── Tool definitions ──");
-check("4 tools defined", TOOLS.length === 4);
+check("5 tools defined", TOOLS.length === 5);
 check(
   "all tools have name + description + input_schema",
   TOOLS.every((t) => t.name && t.description && t.input_schema)
 );
 const toolNames = TOOLS.map((t) => t.name).sort();
 check(
-  "tools are add_item, clear_cart, remove_line, update_quantity",
+  "tools are add_item, clear_cart, remove_line, update_line, update_quantity",
   JSON.stringify(toolNames) ===
-    JSON.stringify(["add_item", "clear_cart", "remove_line", "update_quantity"]),
+    JSON.stringify([
+      "add_item",
+      "clear_cart",
+      "remove_line",
+      "update_line",
+      "update_quantity",
+    ]),
   `got: ${toolNames.join(", ")}`
 );
 
@@ -127,6 +133,44 @@ check(
 const v5 = validateToolCall("clear_cart", {}, cartWithBurger);
 check("clear_cart accepted", v5.ok && v5.action.type === "clear_cart");
 
+// Build a cart containing a latte (size required) so we can exercise
+// update_line modifier-replacement paths.
+const latteLine: CartLine = {
+  lineId: "line-latte",
+  itemId: "iced-latte",
+  quantity: 1,
+  modifiers: [
+    { groupId: "size", optionId: "small" },
+    { groupId: "milk", optionId: "whole" },
+  ],
+};
+const cartWithLatte: Cart = { lines: [latteLine] };
+
+const v6 = validateToolCall(
+  "update_line",
+  {
+    line_id: "line-latte",
+    quantity: 1,
+    modifiers: [
+      { group_id: "size", option_id: "large" },
+      { group_id: "milk", option_id: "oat" },
+    ],
+  },
+  cartWithLatte
+);
+check(
+  "update_line replaces modifiers in place",
+  v6.ok &&
+    v6.action.type === "update_line" &&
+    v6.action.lineId === "line-latte" &&
+    v6.action.modifiers.some(
+      (m) => m.groupId === "size" && m.optionId === "large"
+    ) &&
+    v6.action.modifiers.some(
+      (m) => m.groupId === "milk" && m.optionId === "oat"
+    )
+);
+
 console.log("\n── Validator: rejections ──");
 
 const r1 = validateToolCall(
@@ -185,6 +229,30 @@ check(
 
 const r6 = validateToolCall("nonexistent_tool", {}, emptyCart);
 check("rejects unknown tool name", !r6.ok && r6.reason.includes("Unknown tool"));
+
+const r7 = validateToolCall(
+  "update_line",
+  { line_id: "line-latte", quantity: 1, modifiers: [] },
+  cartWithLatte
+);
+check(
+  "rejects update_line that drops required modifier (size)",
+  !r7.ok && r7.reason.includes("required modifier")
+);
+
+const r8 = validateToolCall(
+  "update_line",
+  {
+    line_id: "missing",
+    quantity: 1,
+    modifiers: [{ group_id: "size", option_id: "small" }],
+  },
+  cartWithLatte
+);
+check(
+  "rejects update_line for unknown lineId",
+  !r8.ok && r8.reason.includes("not found")
+);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);

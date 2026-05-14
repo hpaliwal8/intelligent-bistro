@@ -3,6 +3,7 @@ import { findItem } from "../../../shared";
 import {
   AddItemInput,
   UpdateQuantityInput,
+  UpdateLineInput,
   RemoveLineInput,
   ClearCartInput,
 } from "./tools";
@@ -99,6 +100,67 @@ export function validateToolCall(
           type: "update_quantity",
           lineId: parsed.data.line_id,
           quantity: parsed.data.quantity,
+        },
+      };
+    }
+
+    case "update_line": {
+      const parsed = UpdateLineInput.safeParse(rawInput);
+      if (!parsed.success) {
+        return { ok: false, reason: `update_line: ${parsed.error.message}` };
+      }
+      const line = cart.lines.find((l) => l.lineId === parsed.data.line_id);
+      if (!line) {
+        return {
+          ok: false,
+          reason: `update_line: lineId "${parsed.data.line_id}" not found in cart`,
+        };
+      }
+      const item = findItem(line.itemId);
+      if (!item) {
+        return {
+          ok: false,
+          reason: `update_line: cart line references unknown item "${line.itemId}"`,
+        };
+      }
+      // Modifier validation — same shape as add_item: every selected
+      // group_id/option_id must exist on the item, and every required group
+      // must be present in the new modifier set.
+      for (const m of parsed.data.modifiers) {
+        const group = item.modifiers.find((g) => g.id === m.group_id);
+        if (!group) {
+          return {
+            ok: false,
+            reason: `update_line: unknown group_id "${m.group_id}" for item "${item.id}"`,
+          };
+        }
+        const opt = group.options.find((o) => o.id === m.option_id);
+        if (!opt) {
+          return {
+            ok: false,
+            reason: `update_line: unknown option_id "${m.option_id}" in group "${group.id}"`,
+          };
+        }
+      }
+      for (const g of item.modifiers) {
+        if (g.required && !parsed.data.modifiers.some((m) => m.group_id === g.id)) {
+          return {
+            ok: false,
+            reason: `update_line: required modifier "${g.id}" missing in new modifier set for "${item.id}"`,
+          };
+        }
+      }
+      return {
+        ok: true,
+        action: {
+          type: "update_line",
+          lineId: parsed.data.line_id,
+          quantity: parsed.data.quantity,
+          modifiers: parsed.data.modifiers.map((m) => ({
+            groupId: m.group_id,
+            optionId: m.option_id,
+          })),
+          notes: parsed.data.notes,
         },
       };
     }
