@@ -33,39 +33,6 @@ Open the app, browse the **Menu** tab, tap into an item, add to cart, then switc
 
 ---
 
-## Demo recipe (for the Loom)
-
-### UI walkthrough (~90 sec)
-
-1. **Browse** — Menu tab → scroll the "Tonight's picks" hero strip → tap a card → item-detail modal slides up
-2. **Customize** — pick required modifiers (e.g. spice level) → optionally type a note in *Special instructions* ("extra crispy", "no onions") → tap **Add**
-3. **Floating cart** — back on the menu, the orange "View cart" pill animates in above the tab bar → tap it
-4. **Edit a line** — tap a cart line → modal re-opens in *edit mode* with current modifiers pre-selected → change something → tap **Save**
-5. **Adjust** — use the qty stepper on a line, or swipe-remove via the trash icon → totals re-compute live
-6. **Place order** — tap **Place Order** → animated success overlay with spring check → tap **Done** → cart clears
-
-### AI prompts to use (~3 min)
-
-Switch to the **Assistant** tab and paste these in order. Each one demonstrates a different capability — you can shorten or skip if you're tight on time.
-
-| # | Prompt | What it demonstrates |
-|---|---|---|
-| 1 | `Two spicy chicken sandwiches, extra spicy` | Multi-quantity add + required modifier parsed from "extra spicy" |
-| 2 | `Add a Smash Burger with bacon and an iced latte` | Two `add_item` tool calls in one turn + optional extras + cross-category |
-| 3 | `Actually make it three burgers` | `update_quantity` on the existing `lineId`, no new line created |
-| 4 | `Do you have pizza?` | Graceful decline + suggests Margherita Flatbread (no fabrication of off-menu items) |
-| 5 | `I want a sandwich` | Ambiguity handling — asks one focused clarifying question before acting |
-| 6 | *(go to cart, manually delete an item)* then back to Assistant: `What's in my cart now?` | Authoritative cart state — assistant reads the live cart, doesn't hallucinate items from earlier turns it added |
-
-### What to point out in voice-over
-
-- **Live SSE streaming** — text streams token-by-token while the orange "action pills" appear *below* the bubble as each tool call completes
-- **Cart-line pulse** — when the AI fires `add_item`, the matching cart line briefly flashes accent-orange
-- **Cart badge** — bounces every time the count changes
-- **Edge cases** — point at prompts #4 and #5 to show the AI respects menu constraints and asks before acting
-
----
-
 ## Prerequisites
 
 | Requirement | Why |

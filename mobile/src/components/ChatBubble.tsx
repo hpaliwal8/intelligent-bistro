@@ -5,20 +5,24 @@ import type { ChatTurn } from "../state/chatStore";
 import { colors, fonts } from "../theme";
 import { ActionPill } from "./ActionPill";
 
-// Render inline Markdown emphasis (currently just **bold**, the only marker
-// Claude uses regularly). Splits the input on the bold-marker regex and wraps
-// each captured group in a bolder Text segment. Falls back to plain text for
-// everything else.
+// Render inline Markdown emphasis. Handles **bold** and *italic*. Bold is
+// matched first (more chars → wins the regex alternation), so `**foo**` is
+// never accidentally parsed as italic. Content inside a marker can't contain
+// asterisks or newlines, which is fine for everything the model emits.
 function renderInlineMarkdown(input: string): React.ReactNode[] {
-  const parts = input.split(/(\*\*[^*\n]+\*\*)/g);
+  const parts = input.split(/(\*\*[^*\n]+\*\*|\*[^*\n]+\*)/g);
   return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+    if (part.length > 4 && part.startsWith("**") && part.endsWith("**")) {
       return (
-        <Text
-          key={i}
-          style={{ fontFamily: fonts.bold, fontWeight: "700" }}
-        >
+        <Text key={i} style={{ fontFamily: fonts.bold, fontWeight: "700" }}>
           {part.slice(2, -2)}
+        </Text>
+      );
+    }
+    if (part.length > 2 && part.startsWith("*") && part.endsWith("*")) {
+      return (
+        <Text key={i} style={{ fontStyle: "italic" }}>
+          {part.slice(1, -1)}
         </Text>
       );
     }
