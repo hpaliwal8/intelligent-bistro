@@ -16,6 +16,7 @@ import { ScreenHeader } from "../../src/components/ScreenHeader";
 import { ChatBubble } from "../../src/components/ChatBubble";
 import { TypingIndicator } from "../../src/components/TypingIndicator";
 import { SuggestedPrompts } from "../../src/components/SuggestedPrompts";
+import { CartHeaderButton } from "../../src/components/CartHeaderButton";
 import { SendIcon } from "../../src/components/Icons";
 import { useChat } from "../../src/state/chatStore";
 import { colors, fonts } from "../../src/theme";
@@ -75,36 +76,39 @@ export default function ChatScreen() {
           title="How can I help?"
           subtitle="Tell me what you're craving — I'll add it to your cart."
           rightSlot={
-            turns.length > 0 ? (
-              <Pressable
-                onPress={onClear}
-                accessibilityRole="button"
-                accessibilityLabel="Clear conversation"
-                hitSlop={10}
-                style={({ pressed }) => ({
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 999,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  backgroundColor: colors.card,
-                  opacity: pressed ? 0.6 : 1,
-                })}
-              >
-                <Text
-                  style={{
-                    color: colors.muted,
-                    fontSize: 11,
-                    fontFamily: fonts.bold,
-                    fontWeight: "700",
-                    letterSpacing: 1.2,
-                    textTransform: "uppercase",
-                  }}
+            <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+              <CartHeaderButton />
+              {turns.length > 0 ? (
+                <Pressable
+                  onPress={onClear}
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear conversation"
+                  hitSlop={10}
+                  style={({ pressed }) => ({
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 999,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    backgroundColor: colors.card,
+                    opacity: pressed ? 0.6 : 1,
+                  })}
                 >
-                  Clear
-                </Text>
-              </Pressable>
-            ) : null
+                  <Text
+                    style={{
+                      color: colors.muted,
+                      fontSize: 11,
+                      fontFamily: fonts.bold,
+                      fontWeight: "700",
+                      letterSpacing: 1.2,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Clear
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
           }
         />
 

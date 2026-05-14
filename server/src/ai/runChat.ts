@@ -1,8 +1,36 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { ChatRequest, ChatStreamEvent } from "../../../shared";
+import type { Cart, ChatRequest, ChatStreamEvent } from "../../../shared";
+import { findItem } from "../../../shared";
 import { buildSystemPrompt } from "./systemPrompt";
 import { TOOLS } from "./tools";
 import { validateToolCall } from "./validateAction";
+
+/**
+ * One-line cart digest used as an inline reminder on the user's last message.
+ * The system prompt's cart section is authoritative in theory, but the model
+ * leans heavily on conversation history. Injecting the live cart state into
+ * the most-attended-to position (the latest user turn) consistently overrides
+ * that bias. The customer never sees this text — it's only in the request body
+ * sent to Anthropic, not echoed to the client.
+ */
+function cartDigest(cart: Cart): string {
+  if (cart.lines.length === 0) return "(cart is empty)";
+  return cart.lines
+    .map((l) => {
+      const item = findItem(l.itemId);
+      const name = item?.name ?? l.itemId;
+      const mods = l.modifiers
+        .map((m) => {
+          const g = item?.modifiers.find((mg) => mg.id === m.groupId);
+          const o = g?.options.find((opt) => opt.id === m.optionId);
+          return o?.label ?? m.optionId;
+        })
+        .filter(Boolean)
+        .join(", ");
+      return `${l.quantity}× ${name}${mods ? ` (${mods})` : ""}`;
+    })
+    .join("; ");
+}
 
 const DEFAULT_MODEL = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
 
@@ -36,12 +64,21 @@ export async function runChat(
 ): Promise<void> {
   const client = getClient();
 
+  // Inject a hidden cart-state preamble into the latest user message. The
+  // customer's actual words are clearly delimited so the model still treats
+  // the rest of the turn as their input. This beats history-based hallucination.
+  const augmentedUserContent = `[Live cart snapshot (authoritative — overrides any earlier turns): ${cartDigest(
+    req.cart
+  )}]
+
+User says: ${req.message}`;
+
   const messages: Anthropic.Messages.MessageParam[] = [
     ...req.history.map((h) => ({
       role: h.role,
       content: h.content,
     })),
-    { role: "user", content: req.message },
+    { role: "user", content: augmentedUserContent },
   ];
 
   const stream = client.messages.stream(

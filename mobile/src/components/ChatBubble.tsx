@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { Text, View } from "react-native";
+import Animated, { FadeInDown, LinearTransition } from "react-native-reanimated";
 import type { ChatTurn } from "../state/chatStore";
 import { colors, fonts } from "../theme";
 import { ActionPill } from "./ActionPill";
@@ -35,7 +36,9 @@ export function ChatBubble({ turn }: { turn: ChatTurn }) {
   const showBubble = turn.text.length > 0 || isUser;
 
   return (
-    <View
+    <Animated.View
+      entering={FadeInDown.duration(240).springify().damping(15)}
+      layout={LinearTransition.springify().damping(18).stiffness(200)}
       style={{
         marginBottom: 14,
         alignItems: isUser ? "flex-end" : "flex-start",
@@ -104,6 +107,6 @@ export function ChatBubble({ turn }: { turn: ChatTurn }) {
           ))}
         </View>
       ) : null}
-    </View>
+    </Animated.View>
   );
 }

@@ -109,6 +109,7 @@ export function Button({
         <>
           {leftSlot ? <View>{leftSlot}</View> : null}
           <Text
+            numberOfLines={1}
             style={{
               color:
                 variant === "primary"

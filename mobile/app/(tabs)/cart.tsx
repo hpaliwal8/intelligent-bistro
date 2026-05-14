@@ -1,4 +1,5 @@
-import { Alert, FlatList, Text, View } from "react-native";
+import { useState } from "react";
+import { FlatList, Text, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -6,6 +7,7 @@ import { useCart } from "../../src/state/cartStore";
 import { CartLineRow } from "../../src/components/CartLineRow";
 import { Button } from "../../src/components/Button";
 import { ScreenHeader } from "../../src/components/ScreenHeader";
+import { OrderSuccessOverlay } from "../../src/components/OrderSuccessOverlay";
 import { cartTotal, formatPrice } from "../../src/utils/price";
 import { colors, fonts } from "../../src/theme";
 
@@ -18,13 +20,21 @@ export default function CartScreen() {
   const { subtotal, tax, total } = cartTotal(lines);
   const count = lines.reduce((n, l) => n + l.quantity, 0);
 
+  // Order success overlay state — we snapshot the totals at order time so the
+  // overlay can keep showing them after the cart is cleared on dismiss.
+  const [successSnapshot, setSuccessSnapshot] = useState<{
+    count: number;
+    total: number;
+  } | null>(null);
+
   const placeOrder = () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert(
-      "Order placed",
-      `${count} item${count === 1 ? "" : "s"} • ${formatPrice(total)}\n\nThanks — we'll have it ready shortly.`,
-      [{ text: "OK", onPress: clear }]
-    );
+    setSuccessSnapshot({ count, total });
+  };
+
+  const dismissSuccess = () => {
+    setSuccessSnapshot(null);
+    clear();
   };
 
   return (
@@ -39,6 +49,13 @@ export default function CartScreen() {
         eyebrow="Your Order"
         title="Cart"
         subtitle={count > 0 ? `${count} item${count === 1 ? "" : "s"}` : undefined}
+      />
+
+      <OrderSuccessOverlay
+        visible={successSnapshot !== null}
+        itemCount={successSnapshot?.count ?? 0}
+        totalCents={successSnapshot?.total ?? 0}
+        onDismiss={dismissSuccess}
       />
 
       {lines.length === 0 ? (

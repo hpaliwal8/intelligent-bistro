@@ -8,6 +8,7 @@ import { MenuCard } from "../../src/components/MenuCard";
 import { CategoryStrip } from "../../src/components/CategoryStrip";
 import { ScreenHeader } from "../../src/components/ScreenHeader";
 import { PopularStrip } from "../../src/components/PopularStrip";
+import { CartFloatingBar } from "../../src/components/CartFloatingBar";
 import { colors } from "../../src/theme";
 
 export default function MenuScreen() {
@@ -21,6 +22,7 @@ export default function MenuScreen() {
   }, [active]);
 
   return (
+    <>
     <FlatList
       data={items}
       keyExtractor={(i) => i.id}
@@ -46,11 +48,13 @@ export default function MenuScreen() {
         </Text>
       }
       contentContainerStyle={{
-        paddingBottom: tabBarHeight + 24,
+        paddingBottom: tabBarHeight + 72,
         backgroundColor: colors.bg,
       }}
       style={{ backgroundColor: colors.bg }}
       showsVerticalScrollIndicator={false}
     />
+    <CartFloatingBar />
+    </>
   );
 }

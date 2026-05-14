@@ -157,12 +157,15 @@ export default function TabsLayout() {
           ),
         }}
       />
+      {/*
+       * Cart screen is reachable via the CartFloatingBar pill on every
+       * screen — no need for a dedicated tab. `href: null` keeps the route
+       * registered but hides it from the bottom bar.
+       */}
       <Tabs.Screen
         name="cart"
         options={{
-          tabBarAccessibilityLabel: "Cart tab",
-          tabBarIcon: () => null,
-          tabBarLabel: ({ focused }) => <CartTabLabel focused={focused} />,
+          href: null,
         }}
       />
     </Tabs>

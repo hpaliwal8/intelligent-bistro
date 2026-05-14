@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -19,13 +19,21 @@ import { CloseIcon, CheckIcon } from "../../src/components/Icons";
 import { useCart } from "../../src/state/cartStore";
 
 export default function ItemDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, lineId } = useLocalSearchParams<{ id: string; lineId?: string }>();
   const insets = useSafeAreaInsets();
   const item = useMemo(() => (id ? findItem(id) : undefined), [id]);
   const addItem = useCart((s) => s.addItem);
+  const updateLine = useCart((s) => s.updateLine);
+  // The existing line we're editing, if `lineId` was passed in the route.
+  const editingLine = useCart((s) =>
+    lineId ? s.lines.find((l) => l.lineId === lineId) ?? null : null
+  );
+  const isEditing = editingLine !== null;
 
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(() => editingLine?.quantity ?? 1);
+  const [notes, setNotes] = useState(() => editingLine?.notes ?? "");
   const [selections, setSelections] = useState<SelectedModifier[]>(() => {
+    if (editingLine) return editingLine.modifiers;
     if (!item) return [];
     return item.modifiers.flatMap((g) => {
       if (!g.required || g.multi) return [];
@@ -71,10 +79,19 @@ export default function ItemDetail() {
   const unit = unitPrice(item, selections);
   const total = unit * quantity;
 
-  const onAdd = () => {
+  const onSubmit = () => {
     if (!requiredOk) return;
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    addItem(item.id, quantity, selections);
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const trimmedNotes = notes.trim() || undefined;
+    if (isEditing && editingLine) {
+      updateLine(editingLine.lineId, {
+        modifiers: selections,
+        quantity,
+        notes: trimmedNotes,
+      });
+    } else {
+      addItem(item.id, quantity, selections, trimmedNotes);
+    }
     router.back();
   };
 
@@ -114,8 +131,11 @@ export default function ItemDetail() {
             hitSlop={12}
             style={({ pressed }) => ({
               position: "absolute",
-              top: insets.top + 4,
-              right: 16,
+              // iOS modal sheets already present below the safe area, so we use
+              // a small fixed offset from the modal top rather than the screen
+              // safe-area inset (which would push the button down into the image).
+              top: 14,
+              right: 14,
               width: 36,
               height: 36,
               borderRadius: 999,
@@ -268,6 +288,75 @@ export default function ItemDetail() {
               </View>
             </View>
           ))}
+
+          {/* Notes field — fills the space when an item has few/no modifiers
+              and gives the user a way to attach special instructions. */}
+          <View style={{ marginTop: 28 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 12,
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.text,
+                  fontFamily: fonts.bold,
+                  fontWeight: "700",
+                  fontSize: 15,
+                }}
+              >
+                Special instructions
+              </Text>
+              <Text
+                style={{
+                  color: colors.muted,
+                  fontSize: 11,
+                  fontFamily: fonts.medium,
+                }}
+              >
+                Optional
+              </Text>
+            </View>
+            <TextInput
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="e.g. extra crispy, no onions, allergic to nuts…"
+              placeholderTextColor={colors.muted}
+              multiline
+              maxLength={200}
+              accessibilityLabel="Special instructions for this item"
+              style={{
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 12,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                color: colors.text,
+                fontSize: 14,
+                lineHeight: 20,
+                fontFamily: fonts.regular,
+                minHeight: 72,
+                textAlignVertical: "top",
+              }}
+            />
+            {notes.length > 0 ? (
+              <Text
+                style={{
+                  color: colors.muted,
+                  fontSize: 11,
+                  marginTop: 6,
+                  fontFamily: fonts.regular,
+                  textAlign: "right",
+                }}
+              >
+                {notes.length}/200
+              </Text>
+            ) : null}
+          </View>
         </View>
       </ScrollView>
 
@@ -291,8 +380,8 @@ export default function ItemDetail() {
         <QuantityStepper value={quantity} onChange={setQuantity} />
         <View style={{ flex: 1 }}>
           <Button
-            label={`Add to cart • ${formatPrice(total)}`}
-            onPress={onAdd}
+            label={`${isEditing ? "Save" : "Add"} • ${formatPrice(total)}`}
+            onPress={onSubmit}
             disabled={!requiredOk}
           />
         </View>

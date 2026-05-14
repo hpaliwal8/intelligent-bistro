@@ -23,6 +23,15 @@ interface CartState {
     notes?: string
   ) => string | null;
   updateQuantity: (lineId: string, quantity: number) => void;
+  /**
+   * Replace an existing line's modifiers / quantity / notes in place.
+   * Used when the user taps a cart line to edit it. lineId is preserved so
+   * animations and references don't break.
+   */
+  updateLine: (
+    lineId: string,
+    next: { modifiers: SelectedModifier[]; quantity: number; notes?: string }
+  ) => void;
   removeLine: (lineId: string) => void;
   clear: () => void;
   applyAiAction: (action: CartAction) => string | null;
@@ -77,6 +86,20 @@ export const useCart = create<CartState>()(
               : s.lines.map((l) =>
                   l.lineId === lineId ? { ...l, quantity } : l
                 ),
+        })),
+
+      updateLine: (lineId, next) =>
+        set((s) => ({
+          lines: s.lines.map((l) =>
+            l.lineId === lineId
+              ? {
+                  ...l,
+                  modifiers: next.modifiers,
+                  quantity: next.quantity,
+                  notes: next.notes,
+                }
+              : l
+          ),
         })),
 
       removeLine: (lineId) =>
