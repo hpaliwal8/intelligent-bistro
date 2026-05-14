@@ -14,12 +14,11 @@ import { fonts } from "../theme";
 import { ChevronRight } from "./Icons";
 
 /**
- * The visual cart pill — no positioning, no animations. Use this when you
- * need to slot the pill into an existing layout (e.g. above the chat input bar).
- * Returns null when the cart is empty so the parent can simply render it
- * unconditionally without worrying about layout shifts.
+ * The visual cart pill — no positioning, no animations. Kept as a separate
+ * internal component to keep `CartFloatingBar` readable. Returns null when
+ * the cart is empty so the wrapper can render it unconditionally.
  */
-export function CartPill() {
+function CartPill() {
   const lines = useCart((s) => s.lines);
   if (lines.length === 0) return null;
 
@@ -28,7 +27,7 @@ export function CartPill() {
 
   const goToCart = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push("/(tabs)/cart");
+    router.push("/cart");
   };
 
   return (
@@ -107,9 +106,10 @@ export function CartPill() {
 }
 
 /**
- * Floating cart pill anchored above the tab bar — for screens (like the menu)
- * where it can sit alone over the content. For screens with their own bottom
- * UI (like chat with its input bar), use <CartPill /> inline instead.
+ * Floating cart pill anchored above the tab bar — used on the menu screen
+ * where it can sit alone over the content. Screens with their own bottom UI
+ * (e.g. the chat input bar) surface cart access via <CartHeaderButton /> in
+ * the screen header instead.
  */
 export function CartFloatingBar() {
   const lines = useCart((s) => s.lines);

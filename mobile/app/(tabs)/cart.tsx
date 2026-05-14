@@ -33,8 +33,14 @@ export default function CartScreen() {
   };
 
   const dismissSuccess = () => {
+    // Fade overlay out first, then clear the cart so the line-exit animations
+    // don't fight with the overlay fade. The overlay's `withTiming(0, 260)`
+    // governs visual dismissal; we clear shortly after to let the lines
+    // start unmounting just as the user can see them again.
     setSuccessSnapshot(null);
-    clear();
+    setTimeout(() => {
+      clear();
+    }, 220);
   };
 
   return (
@@ -49,13 +55,6 @@ export default function CartScreen() {
         eyebrow="Your Order"
         title="Cart"
         subtitle={count > 0 ? `${count} item${count === 1 ? "" : "s"}` : undefined}
-      />
-
-      <OrderSuccessOverlay
-        visible={successSnapshot !== null}
-        itemCount={successSnapshot?.count ?? 0}
-        totalCents={successSnapshot?.total ?? 0}
-        onDismiss={dismissSuccess}
       />
 
       {lines.length === 0 ? (
@@ -136,6 +135,16 @@ export default function CartScreen() {
           </View>
         </>
       )}
+
+      {/* Render LAST so it sits on top of header, list, AND the sticky bottom
+          buttons. React Native paints sibling JSX in source order, so a
+          position-absolute child won't cover later siblings on its own. */}
+      <OrderSuccessOverlay
+        visible={successSnapshot !== null}
+        itemCount={successSnapshot?.count ?? 0}
+        totalCents={successSnapshot?.total ?? 0}
+        onDismiss={dismissSuccess}
+      />
     </View>
   );
 }

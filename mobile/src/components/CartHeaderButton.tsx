@@ -27,7 +27,7 @@ export function CartHeaderButton() {
       <Pressable
         onPress={() => {
           void Haptics.selectionAsync();
-          router.push("/(tabs)/cart");
+          router.push("/cart");
         }}
         accessibilityRole="button"
         accessibilityLabel={`View cart, ${count} item${count === 1 ? "" : "s"}`}
