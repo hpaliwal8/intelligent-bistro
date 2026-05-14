@@ -4,6 +4,7 @@ import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useCart } from "../../src/state/cartStore";
+import { useChat } from "../../src/state/chatStore";
 import { CartLineRow } from "../../src/components/CartLineRow";
 import { Button } from "../../src/components/Button";
 import { ScreenHeader } from "../../src/components/ScreenHeader";
@@ -40,6 +41,12 @@ export default function CartScreen() {
     setSuccessSnapshot(null);
     setTimeout(() => {
       clear();
+      // Order placed = conversational session over. Reset the chat so the
+      // next interaction starts fresh. Otherwise the assistant anchors on
+      // prior turns (where items WERE in the cart) and will hallucinate
+      // re-adds after the user declines unrelated suggestions. The cart
+      // and chat are sibling state, but checkout terminates BOTH.
+      useChat.getState().reset();
     }, 220);
   };
 
